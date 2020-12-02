@@ -39,3 +39,4 @@ test_report/
 cal.txt
 led.txt
 *.pyc
+output.map
