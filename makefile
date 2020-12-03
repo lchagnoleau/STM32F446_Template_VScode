@@ -2,8 +2,8 @@ CC_FLAGS = -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16
 CC_FLAGS_OBJS = $(CC_FLAGS) -DSTM32 -DUSE_STDPERIPH_DRIVER -DSTM32F446xx -DSTM32F4 -DSTM32F446RETx -DDEBUG -O0 -g3 -Wall -fmessage-length=0 -ffunction-sections -c -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" 
 CC_FLAGS_ELF = $(CC_FLAGS) -T"LinkerScript.ld" -Wl,-Map=output.map -Wl,--gc-sections
 
-CC_INCLUDE = app/inc drivers/st/inc CMSIS/inc CMSIS/device/inc
-CC_SOURCE = app/src drivers/st/src startup
+CC_INCLUDE = app/inc drivers/st/inc CMSIS/inc CMSIS/device/inc Third_Party/FreeRTOS/Source/include Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F
+CC_SOURCE = app/src drivers/st/src Third_Party/FreeRTOS/Source  Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F Third_Party/FreeRTOS/Source/portable/MemMang startup
 CC_PARAMS=$(foreach d, $(CC_INCLUDE), -I$d) 
 RM = rm -rf
 MK = mkdir -p
@@ -14,7 +14,7 @@ OBJDIR = obj
 OUTPUT = STM32F446_VS_CODE_TEMPLATE
 RELEASEDIR = release
 
-SOURCES := $(notdir $(shell find $(CC_SOURCE) -name '*.c'))
+SOURCES := $(notdir $(shell find $(CC_SOURCE) -maxdepth 1 -name '*.c'))
 OBJECTS := $(addprefix $(OBJDIR)/,$(SOURCES:%.c=%.o))
 OBJECTS += $(OBJDIR)/startup/startup_stm32f446xx.o
 
@@ -54,6 +54,7 @@ post-build:
 
 dir:
 	@echo 'Creat output folders'
+	@echo $(SOURCES)
 	$(MK) $(BINDIR) $(OBJDIR) $(OBJDIR)/startup
 	@echo ' '
 
