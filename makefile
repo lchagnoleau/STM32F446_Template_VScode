@@ -53,7 +53,14 @@ $(OUTPUT).elf: dir $(OBJDIRS) $(OBJECTS) LinkerScript.ld
 	@echo ' '
 	$(MAKE) --no-print-directory post-build
 
-$(OBJECTS): $(CC_SOURCES) $(S_SOURCES)
+$(OBJDIR)/%.o: %.s
+	@echo 'Building file: $@'
+	@echo 'Invoking: C Compiler'
+	$(CC) $(CC_PARAMS) $(CC_FLAGS_OBJS) -o $@ $<
+	@echo 'Finished building: $@'
+	@echo ' '
+
+$(OBJDIR)/%.o: %.c
 	@echo 'Building file: $@'
 	@echo 'Invoking: C Compiler'
 	$(CC) $(CC_PARAMS) $(CC_FLAGS_OBJS) -o $@ $<
@@ -72,8 +79,7 @@ post-build:
 
 dir:
 	@echo 'Creat output folders'
-	@echo $(OBJECTS)
-	$(MK) $(BINDIR) $(OBJDIR) $(OBJDIR)/startup
+	$(MK) $(BINDIR) $(OBJDIR)
 	@echo ' '
 
 clean:
