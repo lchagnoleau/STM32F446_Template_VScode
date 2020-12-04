@@ -2,8 +2,8 @@ CC_FLAGS = -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16
 CC_FLAGS_OBJS = $(CC_FLAGS) -DSTM32 -DUSE_STDPERIPH_DRIVER -DSTM32F446xx -DSTM32F4 -DSTM32F446RETx -DDEBUG -O0 -g3 -Wall -fmessage-length=0 -ffunction-sections -c -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" 
 CC_FLAGS_ELF = $(CC_FLAGS) -T"LinkerScript.ld" -Wl,-Map=output.map -Wl,--gc-sections
 
-CC_INCLUDE = app/inc drivers/st/inc CMSIS/inc CMSIS/device/inc Third_Party/FreeRTOS/Source/include Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F
-CC_SOURCE = app/src drivers/st/src Third_Party/FreeRTOS/Source  Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F Third_Party/FreeRTOS/Source/portable/MemMang startup
+CC_INCLUDE = app/inc drivers/st/inc CMSIS/inc CMSIS/device/inc Third_Party/FreeRTOS/Source/include Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F Third-Party/SEGGER/Config/inc Third-Party/SEGGER/OS/inc Third-Party/SEGGER/SEGGER/inc
+CC_SOURCE = app/src drivers/st/src Third_Party/FreeRTOS/Source  Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F Third_Party/FreeRTOS/Source/portable/MemMang Third-Party/SEGGER/Config/src Third-Party/SEGGER/OS/src Third-Party/SEGGER/SEGGER/src startup
 CC_PARAMS=$(foreach d, $(CC_INCLUDE), -I$d) 
 RM = rm -rf
 MK = mkdir -p
