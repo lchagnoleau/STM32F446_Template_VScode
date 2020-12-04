@@ -4,6 +4,7 @@
 #include "uart.h"
 #include "FreeRTOS.h"
 #include "task.h"
+#include "SEGGER_SYSVIEW_FreeRTOS.h"
 
 /* MACROS */
 #define AVAILABLE 1
@@ -20,8 +21,15 @@ void vTask2_handler(void *params);
 
 int main(void)
 {
+    /* Enable DWT cycle for SystemView timestamp */
+    DWT->CTRL |= (1 << 0);
+
     /* Hardware board init */
     board_hardware_init();
+
+    /* Start recording of SystemView */
+    SEGGER_SYSVIEW_Conf();
+    SEGGER_SYSVIEW_Start();
 
     send_data("Hello world ! \r\n");
 
