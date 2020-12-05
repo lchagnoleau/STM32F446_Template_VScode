@@ -13,35 +13,40 @@ CC_INCLUDE = 	app/inc \
 				CMSIS/device/inc \
 				Third_Party/FreeRTOS/org/Source/include \
 				Third_Party/FreeRTOS/org/Source/portable/GCC/ARM_CM4F \
-				Third_Party/SEGGER/Config/inc \
-				Third_Party/SEGGER/OS/inc \
-				Third_Party/SEGGER/SEGGER/inc
+				Third_Party/SEGGER/Config \
+				Third_Party/SEGGER/OS \
+				Third_Party/SEGGER/SEGGER
 
 CC_SOURCE = 	app/src \
 				drivers/st/src \
 				Third_Party/FreeRTOS/org/Source \
 				Third_Party/FreeRTOS/org/Source/portable/GCC/ARM_CM4F \
 				Third_Party/FreeRTOS/org/Source/portable/MemMang \
-				Third_Party/SEGGER/Config/src \
-				Third_Party/SEGGER/OS/src \
-				Third_Party/SEGGER/SEGGER/src \
+				Third_Party/SEGGER/Config \
+				Third_Party/SEGGER/OS \
+				Third_Party/SEGGER/SEGGER \
+				Third_Party/SEGGER/SEGGER/Syscalls \
 
 S_SOURCE = 		startup
 
+STA_SOURCE = 	Third_Party/SEGGER/SEGGER/startup
+
 CC_SOURCES := 	$(shell find $(CC_SOURCE) -maxdepth 1 -name '*.c')
 S_SOURCES := 	$(shell find $(S_SOURCE) -maxdepth 1 -name '*.s')
+STA_SOURCES := 	$(shell find $(STA_SOURCE) -maxdepth 1 -name '*.S')
 
-OBJECTS :=		$(addprefix $(OBJDIR)/, $(CC_SOURCES:.c=.o) $(S_SOURCES:.s=.o))
+OBJECTS :=		$(addprefix $(OBJDIR)/, $(CC_SOURCES:.c=.o) $(S_SOURCES:.s=.o) $(STA_SOURCES:.S=.o))
 
 OBJDIRS := 		$(patsubst %, $(OBJDIR)/%, $(CC_SOURCE)) \
-				$(patsubst %, $(OBJDIR)/%, $(S_SOURCE))
+				$(patsubst %, $(OBJDIR)/%, $(S_SOURCE)) \
+				$(patsubst %, $(OBJDIR)/%, $(STA_SOURCE))
 
-VPATH += $(CC_SOURCE) $(S_SOURCES)
+VPATH += $(CC_SOURCE) $(S_SOURCES) $(STA_SOURCES)
 
-CC_FLAGS = -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16
-CC_FLAGS_OBJS = $(CC_FLAGS) -DSTM32 -DUSE_STDPERIPH_DRIVER -DSTM32F446xx -DSTM32F4 -DSTM32F446RETx -DDEBUG -O0 -g3 -Wall -fmessage-length=0 -ffunction-sections -c -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" 
-CC_FLAGS_ELF = $(CC_FLAGS) -T"LinkerScript.ld" -Wl,-Map=output.map -Wl,--gc-sections
-CC_PARAMS=$(foreach d, $(CC_INCLUDE), -I$d) 
+CC_FLAGS = -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -specs=rdimon.specs -lc -lrdimon
+CC_FLAGS_OBJS = -DSTM32 -DUSE_STDPERIPH_DRIVER -DSTM32F446xx -DSTM32F4 -DSTM32F446RETx
+CC_FLAGS_ELF = $(CC_FLAGS) -T"LinkerScript.ld" -Wl,-Map=bin/output.map -Wl,--gc-sections
+CC_PARAMS=$(foreach d, $(CC_INCLUDE), -I$d)
 
 all: $(OUTPUT).elf
 
@@ -56,14 +61,21 @@ $(OUTPUT).elf: dir $(OBJDIRS) $(OBJECTS) LinkerScript.ld
 $(OBJDIR)/%.o: %.s
 	@echo 'Building file: $@'
 	@echo 'Invoking: C Compiler'
-	$(CC) $(CC_PARAMS) $(CC_FLAGS_OBJS) -o $@ $<
+	$(CC) $(CC_FLAGS) $(CC_FLAGS_OBJS) $(CC_PARAMS) -DDEBUG -O0 -g3 -Wall -fmessage-length=0 -ffunction-sections -c -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o $@ $<
+	@echo 'Finished building: $@'
+	@echo ' '
+
+$(OBJDIR)/%.o: %.S
+	@echo 'Building file: $@'
+	@echo 'Invoking: C Compiler'
+	$(CC) $(CC_FLAGS) $(CC_FLAGS_OBJS) $(CC_PARAMS) -DDEBUG -O0 -g3 -Wall -fmessage-length=0 -ffunction-sections -c -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o $@ $<
 	@echo 'Finished building: $@'
 	@echo ' '
 
 $(OBJDIR)/%.o: %.c
 	@echo 'Building file: $@'
 	@echo 'Invoking: C Compiler'
-	$(CC) $(CC_PARAMS) $(CC_FLAGS_OBJS) -o $@ $<
+	$(CC) $(CC_FLAGS) $(CC_FLAGS_OBJS) $(CC_PARAMS) -DDEBUG -O0 -g3 -Wall -fmessage-length=0 -ffunction-sections -c -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o $@ $<
 	@echo 'Finished building: $@'
 	@echo ' '
 
@@ -79,6 +91,7 @@ post-build:
 
 dir:
 	@echo 'Creat output folders'
+	@echo $(OBJECTS)
 	$(MK) $(BINDIR) $(OBJDIR)
 	@echo ' '
 
