@@ -5,6 +5,8 @@
 #include <string.h>
 
 static void board_uart_init(void);
+static void led_init(void);
+static void button_init(void);
 
 void board_hardware_init(void)
 {
@@ -14,6 +16,23 @@ void board_hardware_init(void)
 
     /* Init UART */
     board_uart_init();
+
+    /* Init Led */
+    led_init();
+
+    /* Init button */
+    button_init();
+}
+
+bool is_button_pressed(void)
+{
+    return (bool) !GPIO_ReadInputDataBit(GPIOC, GPIO_Pin_13);
+}
+
+void set_led(bool value)
+{
+    BitAction v = (value) ? Bit_SET : Bit_RESET;
+    GPIO_WriteBit(GPIOA, GPIO_Pin_5, v);
 }
 
 static void board_uart_init(void)
@@ -57,4 +76,52 @@ static void board_uart_init(void)
     USART_ClockInit(USART2, &uart2_init_clock_struct);
 
     USART_Cmd(USART2, ENABLE);
+}
+
+static void led_init(void)
+{
+    /* GREEN Led to PA5
+    * 
+    * the I/O is HIGH, the LED is on
+    * the I/O is LOW,  the LED is off
+    *
+    */
+
+    /* Init struct */
+    GPIO_InitTypeDef gpio_init_struct;
+
+    memset(&gpio_init_struct, 0, sizeof(gpio_init_struct));
+
+    GPIO_StructInit(&gpio_init_struct);
+
+    /* Start clock APB1 (GPIOA) */
+    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
+
+    /* Init GPIO PA5 */
+    gpio_init_struct.GPIO_Pin = GPIO_Pin_5;
+    gpio_init_struct.GPIO_Mode = GPIO_Mode_OUT;
+    GPIO_Init(GPIOA, &gpio_init_struct);
+
+    /* Set led to 0 */
+    set_led(false);
+}
+
+static void button_init(void)
+{
+    /* B1 to PC13 */
+
+    /* Init struct */
+    GPIO_InitTypeDef gpio_init_struct;
+
+    memset(&gpio_init_struct, 0, sizeof(gpio_init_struct));
+
+    GPIO_StructInit(&gpio_init_struct);
+
+    /* Start clock APB1 (GPIOC) */
+    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
+
+    /* Init GPIO PA5 */
+    gpio_init_struct.GPIO_Pin = GPIO_Pin_13;
+    gpio_init_struct.GPIO_Mode = GPIO_Mode_IN;
+    GPIO_Init(GPIOC, &gpio_init_struct);
 }
