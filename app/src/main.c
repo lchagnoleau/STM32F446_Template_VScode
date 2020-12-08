@@ -67,6 +67,7 @@ void vTask1_handler(void *params)
 			UART_ACCESS_KEY = NON_AVAILABLE;
 			send_data("Hello world from Task 1\r\n");
 			UART_ACCESS_KEY = AVAILABLE;
+            SEGGER_SYSVIEW_Print("Task1 is yielding");
 			taskYIELD();
 		}
 	}
@@ -81,6 +82,7 @@ void vTask2_handler(void *params)
 			UART_ACCESS_KEY = NON_AVAILABLE;
 			send_data("Hello world from Task 2\r\n");
 			UART_ACCESS_KEY = AVAILABLE;
+            SEGGER_SYSVIEW_Print("Task2 is yielding");
 			taskYIELD();
 		}
 	}
