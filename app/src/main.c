@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdbool.h>
 #include "stm32f4xx.h"
 #include "board.h"
 #include "uart.h"
@@ -14,7 +15,8 @@
 TaskHandle_t xTaskHande1 = NULL;
 TaskHandle_t xTaskHande2 = NULL;
 
-uint8_t UART_ACCESS_KEY = AVAILABLE;
+bool actual_bp_state = false;
+bool actual_led_state = false;
 
 void vTask1_handler(void *params);
 void vTask2_handler(void *params);
@@ -62,14 +64,12 @@ void vTask1_handler(void *params)
 {
 	while(1)
 	{
-		if(UART_ACCESS_KEY == AVAILABLE)
-		{
-			UART_ACCESS_KEY = NON_AVAILABLE;
-			send_data("Hello world from Task 1\r\n");
-			UART_ACCESS_KEY = AVAILABLE;
-            SEGGER_SYSVIEW_Print("Task1 is yielding");
-			taskYIELD();
-		}
+        if(actual_bp_state != is_button_pressed())
+        {
+            actual_bp_state = !actual_bp_state;
+            SEGGER_SYSVIEW_Print(actual_bp_state ? "pressed" : "not pressed");
+        }
+        taskYIELD();
 	}
 }
 
@@ -77,13 +77,12 @@ void vTask2_handler(void *params)
 {
 	while(1)
 	{
-		if(UART_ACCESS_KEY == AVAILABLE)
-		{
-			UART_ACCESS_KEY = NON_AVAILABLE;
-			send_data("Hello world from Task 2\r\n");
-			UART_ACCESS_KEY = AVAILABLE;
-            SEGGER_SYSVIEW_Print("Task2 is yielding");
-			taskYIELD();
-		}
+        if(actual_led_state != actual_bp_state)
+        {
+            actual_led_state = !actual_led_state;
+            set_led(actual_led_state);
+            SEGGER_SYSVIEW_Print(actual_led_state ? "led on" : "led off");
+        }
+        taskYIELD();
 	}
 }
