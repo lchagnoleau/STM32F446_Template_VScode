@@ -2,6 +2,8 @@
 #include "stm32f4xx_rcc.h"
 #include "stm32f4xx_gpio.h"
 #include "stm32f4xx_usart.h"
+#include "stm32f4xx_exti.h"
+#include "stm32f4xx_syscfg.h"
 #include <string.h>
 
 static void board_uart_init(void);
@@ -112,16 +114,34 @@ static void button_init(void)
 
     /* Init struct */
     GPIO_InitTypeDef gpio_init_struct;
+    EXTI_InitTypeDef exti_init_struct;
 
     memset(&gpio_init_struct, 0, sizeof(gpio_init_struct));
+    memset(&exti_init_struct, 0, sizeof(exti_init_struct));
 
     GPIO_StructInit(&gpio_init_struct);
+    EXTI_StructInit(&exti_init_struct);
 
-    /* Start clock APB1 (GPIOC) */
+    /* Start clock APB1 (GPIOC) & APB2 (EXTI13) */
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
 
     /* Init GPIO PA5 */
     gpio_init_struct.GPIO_Pin = GPIO_Pin_13;
     gpio_init_struct.GPIO_Mode = GPIO_Mode_IN;
     GPIO_Init(GPIOC, &gpio_init_struct);
+
+    /* Init EXTI PC13 */
+    exti_init_struct.EXTI_Line = EXTI_Line13;
+    exti_init_struct.EXTI_Mode = EXTI_Mode_Interrupt;
+    exti_init_struct.EXTI_Trigger = EXTI_Trigger_Falling;
+    exti_init_struct.EXTI_LineCmd = ENABLE;
+    EXTI_Init(&exti_init_struct);
+
+    /* Connect it to interrupt */
+    SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOC, EXTI_PinSource13);
+
+    /* Set NVIC priority */
+    NVIC_SetPriority(EXTI15_10_IRQn, 5);
+    NVIC_EnableIRQ(EXTI15_10_IRQn);
 }

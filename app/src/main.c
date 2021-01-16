@@ -1,25 +1,22 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include "stm32f4xx.h"
+#include "stm32f4xx_exti.h"
 #include "board.h"
 #include "uart.h"
 #include "FreeRTOS.h"
 #include "task.h"
 #include "SEGGER_SYSVIEW_FreeRTOS.h"
 
-/* MACROS */
-#define AVAILABLE 1
-#define NON_AVAILABLE 0
 
-
-TaskHandle_t xTaskHande1 = NULL;
-TaskHandle_t xTaskHande2 = NULL;
+TaskHandle_t xTaskLedHandle = NULL;
 
 bool actual_bp_state = false;
 bool actual_led_state = false;
 
-void vTask1_handler(void *params);
-void vTask2_handler(void *params);
+void vTask_Led_handler(void *params);
+void EXTI15_10_IRQHandler(void);
+void button_hanlder(void);
 
 int main(void)
 {
@@ -37,21 +34,14 @@ int main(void)
 
     while(1)
     {
-        /* Create 2 tasks */
+        /* Create task */
         xTaskCreate(
-            vTask1_handler,
-            "Task-1",
+            vTask_Led_handler,
+            "Task-LED",
             configMINIMAL_STACK_SIZE,
             NULL,
             2,
-            &xTaskHande1);
-        xTaskCreate(
-            vTask2_handler,
-            "Task-2",
-            configMINIMAL_STACK_SIZE,
-            NULL,
-            2,
-            &xTaskHande2);
+            &xTaskLedHandle);
 
         /* Start scheduler */
         vTaskStartScheduler();
@@ -60,20 +50,7 @@ int main(void)
     return 0;
 }
 
-void vTask1_handler(void *params)
-{
-	while(1)
-	{
-        if(actual_bp_state != is_button_pressed())
-        {
-            actual_bp_state = !actual_bp_state;
-            SEGGER_SYSVIEW_Print(actual_bp_state ? "pressed" : "not pressed");
-        }
-        taskYIELD();
-	}
-}
-
-void vTask2_handler(void *params)
+void vTask_Led_handler(void *params)
 {
 	while(1)
 	{
@@ -85,4 +62,22 @@ void vTask2_handler(void *params)
         }
         taskYIELD();
 	}
+}
+
+void button_hanlder(void)
+{
+    actual_bp_state = !actual_bp_state;
+    SEGGER_SYSVIEW_Print(actual_bp_state ? "pressed" : "not pressed");
+}
+
+void EXTI15_10_IRQHandler(void)
+{
+    /* SEGGER SysView trace */
+    traceISR_ENTER();
+
+    /* Clear Interupt pending flag */
+    EXTI_ClearITPendingBit(EXTI_Line13);
+
+    /* Call Handler */
+    button_hanlder();
 }
