@@ -37,6 +37,11 @@ void set_led(bool value)
     GPIO_WriteBit(GPIOA, GPIO_Pin_5, v);
 }
 
+void toggle_led()
+{
+    GPIO_ToggleBits(GPIOA, GPIO_Pin_5);
+}
+
 static void board_uart_init(void)
 {
     /* USART2 (PA2 & PA3)

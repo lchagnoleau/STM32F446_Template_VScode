@@ -11,12 +11,9 @@
 
 TaskHandle_t xTaskLedHandle = NULL;
 
-bool actual_bp_state = false;
-bool actual_led_state = false;
-
 void vTask_Led_handler(void *params);
 void EXTI15_10_IRQHandler(void);
-void button_hanlder(void);
+void rtos_delay(uint32_t delay_in_ms);
 
 int main(void)
 {
@@ -54,20 +51,17 @@ void vTask_Led_handler(void *params)
 {
 	while(1)
 	{
-        if(actual_led_state != actual_bp_state)
-        {
-            actual_led_state = !actual_led_state;
-            set_led(actual_led_state);
-            SEGGER_SYSVIEW_Print(actual_led_state ? "led on" : "led off");
-        }
-        taskYIELD();
+        xTaskNotifyWait(0, 0, NULL, portMAX_DELAY);
+
+        toggle_led();
+        rtos_delay(100);
 	}
 }
 
-void button_hanlder(void)
+void rtos_delay(uint32_t delay_in_ms)
 {
-    actual_bp_state = !actual_bp_state;
-    SEGGER_SYSVIEW_Print(actual_bp_state ? "pressed" : "not pressed");
+    uint32_t current_delay = xTaskGetTickCount();
+    while(xTaskGetTickCount() < current_delay + pdMS_TO_TICKS(delay_in_ms));
 }
 
 void EXTI15_10_IRQHandler(void)
@@ -78,6 +72,6 @@ void EXTI15_10_IRQHandler(void)
     /* Clear Interupt pending flag */
     EXTI_ClearITPendingBit(EXTI_Line13);
 
-    /* Call Handler */
-    button_hanlder();
+    /* Notify Task */
+    xTaskNotifyFromISR(xTaskLedHandle, 0, eNoAction, NULL);
 }
